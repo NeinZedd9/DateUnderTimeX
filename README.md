@@ -1,2 +1,2 @@
-# DateUnderTimeX
-Adds today's date under the time on the iPhone X.
+# FreeRAMUnderTimeX
+Adds the free RAM under the time on the iPhone X.
