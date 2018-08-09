@@ -3,19 +3,20 @@
 #import "./Headers/_UIStatusBarTimeItem.h"
 #import "./Headers/_UIStatusBarBackgroundActivityView.h"
 
-static NSNumber *getFreeRAM() {
-  @autoreleasepool {
-    mach_port_t host_port;
-    mach_msg_type_number_t host_size;
-    vm_size_t pagesize;
+static NSString *displayTime = @"";
+static NSTimer *timer;
 
-    host_port = mach_host_self();
-    host_size = sizeof(vm_statistics_data_t) / sizeof(integer_t);
+static NSNumber *getFreeMemory() {
+  @autoreleasepool {
+    mach_port_t host_port = mach_host_self();
+    mach_msg_type_number_t host_size = sizeof(vm_statistics_data_t) / sizeof(integer_t);
+    vm_size_t pagesize;
     host_page_size(host_port, &pagesize);
     vm_statistics_data_t vm_stat;
 
     if (host_statistics(host_port, HOST_VM_INFO, (host_info_t)&vm_stat, &host_size) != KERN_SUCCESS) {
       NSLog(@"FreeRAMUnderTimeX: Failed to fetch vm statistics");
+	  return @-1;
 	}
 
     natural_t mem_free = (vm_stat.free_count + vm_stat.inactive_count) * pagesize;
@@ -28,13 +29,23 @@ static NSNumber *getFreeRAM() {
 
 %hook _UIStatusBarStringView
 
+- (id)initWithFrame:(CGRect)arg1 {
+	id orig = %orig;
+	timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(interval:) userInfo:nil repeats:YES];
+	return orig;
+}
+
+%new - (void)interval:(NSTimer *)timer {
+    [self setText:displayTime];
+}
+
 - (void)setText:(NSString *)text {
+	displayTime = [NSString stringWithString:text];
 	if([text containsString:@":"]) {
-		NSString *newString = [NSString stringWithFormat:@"%@\n%@ MB", text, getFreeRAM()];
+		text = [NSString stringWithFormat:@"%@\n%@ MB", text, getFreeMemory()];
 		self.numberOfLines = 2;
 		self.textAlignment = 1;
 		[self setFont: [self.font fontWithSize:12]];
-		return %orig(newString);
 	}
 
 	return %orig(text);
@@ -45,10 +56,10 @@ static NSNumber *getFreeRAM() {
 %hook _UIStatusBarTimeItem
 
 - (id)applyUpdate:(id)arg1 toDisplayItem:(id)arg2 {
-	id returnThis = %orig;
+	id orig = %orig;
 	[self.shortTimeView setFont: [self.shortTimeView.font fontWithSize:12]];
 	[self.pillTimeView setFont: [self.pillTimeView.font fontWithSize:12]];
-	return returnThis;
+	return orig;
 }
 
 %end
