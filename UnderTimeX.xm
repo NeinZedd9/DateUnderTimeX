@@ -3,8 +3,8 @@
 #import "./Headers/_UIStatusBarTimeItem.h"
 #import "./Headers/_UIStatusBarBackgroundActivityView.h"
 
-static NSString *displayTime = @"";
-static NSTimer *timer;
+// static NSString *displayTime = @"";
+// static NSTimer *timer;
 
 static NSNumber *getFreeMemory() {
   @autoreleasepool {
@@ -29,19 +29,19 @@ static NSNumber *getFreeMemory() {
 
 %hook _UIStatusBarStringView
 
-- (id)initWithFrame:(CGRect)arg1 {
-	id orig = %orig;
-	timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(interval:) userInfo:nil repeats:YES];
-	return orig;
-}
+// - (id)initWithFrame:(CGRect)arg1 {
+// 	id orig = %orig;
+// 	timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(interval:) userInfo:nil repeats:YES];
+// 	return orig;
+// }
 
-%new - (void)interval:(NSTimer *)timer {
-    [self setText:displayTime];
-}
+// %new - (void)interval:(NSTimer *)timer {
+//     [self setText:displayTime];
+// }
 
 - (void)setText:(NSString *)text {
-	displayTime = [NSString stringWithString:text];
 	if([text containsString:@":"]) {
+		// displayTime = [NSString stringWithString:text];
 		text = [NSString stringWithFormat:@"%@\n%@ MB", text, getFreeMemory()];
 		self.numberOfLines = 2;
 		self.textAlignment = 1;

@@ -1,2 +1,2 @@
-# FreeRAMUnderTimeX
-Adds the free RAM under the time on the iPhone X.
+# UnderTimeX
+Adds details under the status bar clock on iPhone X.
