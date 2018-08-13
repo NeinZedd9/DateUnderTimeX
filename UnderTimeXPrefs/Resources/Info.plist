@@ -5,9 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>UnderTimeXPrefs</string>
+	<string>UnderTimeX</string>
 	<key>CFBundleIdentifier</key>
-	<string>jp.i4m1k0su.undertimexprefs</string>
+	<string>jp.i4m1k0su.undertimex</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -19,6 +19,6 @@
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>NSPrincipalClass</key>
-	<string>UTXRootListController</string>
+	<string>UnderTimeXListController</string>
 </dict>
 </plist>

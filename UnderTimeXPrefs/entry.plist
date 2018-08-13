@@ -5,17 +5,17 @@
 	<key>entry</key>
 	<dict>
 		<key>bundle</key>
-		<string>UnderTimeXPrefs</string>
+		<string>UnderTimeX</string>
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
-		<string>UTXRootListController</string>
+		<string>UnderTimeXListController</string>
 		<key>icon</key>
 		<string>icon.png</string>
 		<key>isController</key>
 		<true/>
 		<key>label</key>
-		<string>UnderTimeXPrefs</string>
+		<string>UnderTimeX</string>
 	</dict>
 </dict>
 </plist>

@@ -1,30 +1,71 @@
-#import <mach/mach.h>
 #import "./Headers/_UIStatusBarStringView.h"
 #import "./Headers/_UIStatusBarTimeItem.h"
 #import "./Headers/_UIStatusBarBackgroundActivityView.h"
+#import "./Functions.h"
 
-// static NSString *displayTime = @"";
+static NSString *displayTime = @"";
 // static NSTimer *timer;
+static NSString *const kSettingsPath = @"/var/mobile/Library/Preferences/jp.i4m1k0su.undertimex.plist";
 
-static NSNumber *getFreeMemory() {
-  @autoreleasepool {
-    mach_port_t host_port = mach_host_self();
-    mach_msg_type_number_t host_size = sizeof(vm_statistics_data_t) / sizeof(integer_t);
-    vm_size_t pagesize;
-    host_page_size(host_port, &pagesize);
-    vm_statistics_data_t vm_stat;
+NSMutableDictionary *preferences;
+BOOL isEnabled = NO;
 
-    if (host_statistics(host_port, HOST_VM_INFO, (host_info_t)&vm_stat, &host_size) != KERN_SUCCESS) {
-      NSLog(@"FreeRAMUnderTimeX: Failed to fetch vm statistics");
-	  return @-1;
+static void loadPreferences() {
+
+	//設定ファイルの有無チェック
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	if (![fileManager fileExistsAtPath: kSettingsPath]) {
+
+		//ない場合にデフォルト設定を作成
+		NSDictionary *defaultPreferences = @{
+			@"sw_enabled":@YES,
+			@"sl_interval":@60,
+			@"lst_left_top_item":@3,
+			@"lst_left_bottom_item":@0,
+		};
+
+		preferences = [[NSMutableDictionary alloc] initWithDictionary: defaultPreferences];
+		[defaultPreferences release];
+
+		#ifdef DEBUG
+			BOOL result = [preferences writeToFile: kSettingsPath atomically: YES];
+			if (!result) {
+				NSLog(@"ファイルの書き込みに失敗");
+			}
+		#else
+			[preferences writeToFile: kSettingsPath atomically: YES];
+		#endif
+
+	} else {
+		//あれば読み込み
+		preferences = [[NSMutableDictionary alloc] initWithContentsOfFile: kSettingsPath];
 	}
+	isEnabled = [[preferences objectForKey:@"sw_enabled"]boolValue];
 
-    natural_t mem_free = (vm_stat.free_count + vm_stat.inactive_count) * pagesize;
+}
 
-    NSNumber *freeMemory = [NSNumber numberWithUnsignedInt:round((mem_free / 1024) / 1024)];
+static NSString *getDetail(int detailId) {
+	switch(detailId) {
+		case 0:
+			return displayTime;
+		case 1:
+			return [Functions getDate];
+		case 2:
+			return [Functions getDayOfTheWeek];
+		case 3:
+			return [Functions getDateAndDayOfTheWeek];
+		case 4:
+			return [NSString stringWithFormat:@"%@ MB", [Functions getFreeMemory]];
+		// case 5:
+		// 	return [Functions getSpeed];
+		default:
+			return @"";
+	}
+}
 
-    return freeMemory;
-  }
+//起動時の処理
+%ctor {
+	loadPreferences();
 }
 
 %hook _UIStatusBarStringView
@@ -40,9 +81,15 @@ static NSNumber *getFreeMemory() {
 // }
 
 - (void)setText:(NSString *)text {
+	if (!isEnabled) {
+		return %orig;
+	}
+
 	if([text containsString:@":"]) {
-		// displayTime = [NSString stringWithString:text];
-		text = [NSString stringWithFormat:@"%@\n%@ MB", text, getFreeMemory()];
+		displayTime = [NSString stringWithString:text];
+		NSString *top = getDetail([[preferences objectForKey:@"lst_left_top_item"]intValue]);
+		NSString *bottom = getDetail([[preferences objectForKey:@"lst_left_bottom_item"]intValue]);
+		text = [NSString stringWithFormat:@"%@\n%@", top, bottom];
 		self.numberOfLines = 2;
 		self.textAlignment = 1;
 		[self setFont: [self.font fontWithSize:12]];
@@ -56,6 +103,10 @@ static NSNumber *getFreeMemory() {
 %hook _UIStatusBarTimeItem
 
 - (id)applyUpdate:(id)arg1 toDisplayItem:(id)arg2 {
+	if (!isEnabled) {
+		return %orig;
+	}
+
 	id orig = %orig;
 	[self.shortTimeView setFont: [self.shortTimeView.font fontWithSize:12]];
 	[self.pillTimeView setFont: [self.pillTimeView.font fontWithSize:12]];
@@ -67,6 +118,10 @@ static NSNumber *getFreeMemory() {
 %hook _UIStatusBarBackgroundActivityView
 
 - (void)setCenter:(CGPoint)point {
+	if (!isEnabled) {
+		return %orig;
+	}
+
 	point.y = 11;
 	self.frame = CGRectMake(0, 0, self.frame.size.width, 31);
 	self.pulseLayer.frame = CGRectMake(0, 0, self.frame.size.width, 31);
