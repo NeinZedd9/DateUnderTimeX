@@ -1,6 +1,5 @@
-@interface _UIStatusBarStringView : UIView
-@property (copy) NSString *text;
-@property NSInteger numberOfLines;
-@property (copy) UIFont *font;
-@property NSInteger textAlignment;
+@interface _UIStatusBarStringView : UILabel
+@property (nonatomic, retain) NSString *leftSideText;
+@property (nonatomic, retain) NSString *rightSideText;
+- (void)setTextRightSide;
 @end

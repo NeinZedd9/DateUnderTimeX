@@ -116,7 +116,56 @@
 				<!-- <integer>5</integer> -->
 			</array>
 		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>RIGHTSIDE</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>-1</integer>
+			<key>defaults</key>
+			<string>jp.i4m1k0su.undertimex</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>lst_right_top_item</string>
+			<key>label</key>
+			<string>SETTINGS</string>
+			<key>validTitles</key>
+			<array>
+				<string>DISABLE</string>
+				<string>CLOCK</string>
+				<string>DATE</string>
+				<string>DAYOFTHEWEEK</string>
+				<string>DATEANDDAYOFTHEWEEK</string>
+				<string>FREERAM</string>
+				<!-- <string>DATASIZE</string> -->
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>-1</integer>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>4</integer>
+				<!-- <integer>5</integer> -->
+			</array>
+		</dict>
+
 		<!-- 設定保存ボタン -->
+		<!-- 隙間 -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string></string>
+		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSButtonCell</string>
