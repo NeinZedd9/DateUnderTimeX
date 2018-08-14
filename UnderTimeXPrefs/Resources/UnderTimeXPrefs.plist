@@ -116,8 +116,32 @@
 				<!-- <integer>5</integer> -->
 			</array>
 		</dict>
-
-
+		<!-- 設定保存ボタン -->
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>APPLY_CHANGES</string>
+			<key>action</key>
+			<string>respring</string>
+		</dict>
+		<!-- フッター -->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>DEVELOPER</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>@i4M1k0SU</string>
+			<key>action</key>
+			<string>openTwitter</string>
+			<key>icon</key>
+			<string>Twitter.png</string>
+		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
