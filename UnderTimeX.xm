@@ -1,12 +1,14 @@
 #import "./Headers/_UIStatusBarStringView.h"
 #import "./Headers/_UIStatusBarTimeItem.h"
 #import "./Headers/_UIStatusBarBackgroundActivityView.h"
+#import "./Headers/_UIStatusBarForegroundView.h"
 #import "./Functions.h"
 
 static NSString *const kSettingsPath = @"/var/mobile/Library/Preferences/jp.i4m1k0su.undertimex.plist";
 
 NSMutableDictionary *preferences;
 BOOL isEnabled = NO;
+UILabel *rightSideLabel;
 
 static void loadPreferences() {
 
@@ -20,6 +22,7 @@ static void loadPreferences() {
 			@"sl_interval":@60.0,
 			@"lst_left_top_item":@3,
 			@"lst_left_bottom_item":@0,
+			@"lst_right_top_item":@-1
 		};
 
 		preferences = [[NSMutableDictionary alloc] initWithDictionary: defaultPreferences];
@@ -68,6 +71,9 @@ static NSString *getDetail(int detailId) {
 
 %hook _UIStatusBarStringView
 
+%property (nonatomic, retain) NSString *leftSideText;
+%property (nonatomic, retain) NSString *rightSideText;
+
 - (void)setText:(NSString *)text {
 	if (!isEnabled) {
 		return %orig;
@@ -77,12 +83,37 @@ static NSString *getDetail(int detailId) {
 		NSString *top = getDetail([[preferences objectForKey:@"lst_left_top_item"]intValue]);
 		NSString *bottom = getDetail([[preferences objectForKey:@"lst_left_bottom_item"]intValue]);
 		text = [NSString stringWithFormat:@"%@\n%@", top, bottom];
+		// 変更がないときは何もしない
+		if ([text isEqualToString:self.leftSideText]) {
+			return;
+		}
+		self.leftSideText = [NSString stringWithString:text];
 		self.numberOfLines = 2;
-		self.textAlignment = 1;
+		self.textAlignment = NSTextAlignmentCenter;
 		[self setFont: [self.font fontWithSize:12]];
+
+		// 右側
+		[self setTextRightSide];
 	}
 
 	return %orig(text);
+}
+
+%new - (void)setTextRightSide {
+	if ([[preferences objectForKey:@"lst_right_top_item"]intValue] == -1) {
+		return;
+	}
+
+	NSString *right = getDetail([[preferences objectForKey:@"lst_right_top_item"]intValue]);
+	// 変更がないときは何もしない
+	if ([right isEqualToString:self.rightSideText]) {
+		return;
+	}
+	self.rightSideText = [NSString stringWithString:right];
+
+	// NSLog(@"Color: %@", self.textColor);
+	// rightSideLabel.textColor = [UIColor whiteColor];
+	rightSideLabel.text = right;
 }
 
 %end
@@ -127,6 +158,27 @@ static NSString *getDetail(int detailId) {
 	self.frame = CGRectMake(0, 0, self.frame.size.width, 31);
 	self.pulseLayer.frame = CGRectMake(0, 0, self.frame.size.width, 31);
 	%orig(point);
+}
+
+%end
+
+%hook _UIStatusBarForegroundView
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    %orig;
+	if ([[preferences objectForKey:@"lst_left_bottom_item"]intValue] != -1) {
+		[self initRightSideLabel];
+    	[self addSubview:rightSideLabel];
+	}
+    return self;
+}
+
+%new - (void)initRightSideLabel {
+    rightSideLabel = [[UILabel alloc]initWithFrame:CGRectMake(294, 2.2, 66.6, 14)];
+    rightSideLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightSemibold];
+    // self.rightSideLabel.adjustsFontSizeToFitWidth = YES;
+	rightSideLabel.textColor = [UIColor whiteColor];
+    rightSideLabel.textAlignment = NSTextAlignmentCenter;
 }
 
 %end
