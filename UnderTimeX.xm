@@ -80,6 +80,9 @@ static NSString *getDetail(int detailId) {
 	}
 
 	if([text containsString:@":"]) {
+		// 右側
+		[self setTextRightSide];
+
 		NSString *top = getDetail([[preferences objectForKey:@"lst_left_top_item"]intValue]);
 		NSString *bottom = getDetail([[preferences objectForKey:@"lst_left_bottom_item"]intValue]);
 		text = [NSString stringWithFormat:@"%@\n%@", top, bottom];
@@ -91,9 +94,6 @@ static NSString *getDetail(int detailId) {
 		self.numberOfLines = 2;
 		self.textAlignment = NSTextAlignmentCenter;
 		[self setFont: [self.font fontWithSize:12]];
-
-		// 右側
-		[self setTextRightSide];
 	}
 
 	return %orig(text);
