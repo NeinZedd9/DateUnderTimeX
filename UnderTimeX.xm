@@ -3,8 +3,6 @@
 #import "./Headers/_UIStatusBarBackgroundActivityView.h"
 #import "./Functions.h"
 
-static NSString *displayTime = @"";
-// static NSTimer *timer;
 static NSString *const kSettingsPath = @"/var/mobile/Library/Preferences/jp.i4m1k0su.undertimex.plist";
 
 NSMutableDictionary *preferences;
@@ -19,7 +17,7 @@ static void loadPreferences() {
 		//ない場合にデフォルト設定を作成
 		NSDictionary *defaultPreferences = @{
 			@"sw_enabled":@YES,
-			@"sl_interval":@60,
+			@"sl_interval":@60.0,
 			@"lst_left_top_item":@3,
 			@"lst_left_bottom_item":@0,
 		};
@@ -47,7 +45,7 @@ static void loadPreferences() {
 static NSString *getDetail(int detailId) {
 	switch(detailId) {
 		case 0:
-			return displayTime;
+			return [Functions getTime];
 		case 1:
 			return [Functions getDate];
 		case 2:
@@ -70,23 +68,12 @@ static NSString *getDetail(int detailId) {
 
 %hook _UIStatusBarStringView
 
-// - (id)initWithFrame:(CGRect)arg1 {
-// 	id orig = %orig;
-// 	timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(interval:) userInfo:nil repeats:YES];
-// 	return orig;
-// }
-
-// %new - (void)interval:(NSTimer *)timer {
-//     [self setText:displayTime];
-// }
-
 - (void)setText:(NSString *)text {
 	if (!isEnabled) {
 		return %orig;
 	}
 
 	if([text containsString:@":"]) {
-		displayTime = [NSString stringWithString:text];
 		NSString *top = getDetail([[preferences objectForKey:@"lst_left_top_item"]intValue]);
 		NSString *bottom = getDetail([[preferences objectForKey:@"lst_left_bottom_item"]intValue]);
 		text = [NSString stringWithFormat:@"%@\n%@", top, bottom];
@@ -102,14 +89,28 @@ static NSString *getDetail(int detailId) {
 
 %hook _UIStatusBarTimeItem
 
+%property (nonatomic, retain) NSTimer *timer;
+
+- (instancetype)init {
+	%orig;
+	self.timer = [NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"sl_interval"]floatValue] target:self selector:@selector(overwriteText:) userInfo:nil repeats:YES];
+	return self;
+}
+
+%new - (void)overwriteText:(NSTimer *)timer {
+	self.shortTimeView.text = @":";
+	self.pillTimeView.text = @":";
+	[self.shortTimeView setFont: [self.shortTimeView.font fontWithSize:12]];
+	[self.pillTimeView setFont: [self.pillTimeView.font fontWithSize:12]];
+}
+
 - (id)applyUpdate:(id)arg1 toDisplayItem:(id)arg2 {
 	if (!isEnabled) {
 		return %orig;
 	}
 
 	id orig = %orig;
-	[self.shortTimeView setFont: [self.shortTimeView.font fontWithSize:12]];
-	[self.pillTimeView setFont: [self.pillTimeView.font fontWithSize:12]];
+	[self overwriteText:nil];
 	return orig;
 }
 

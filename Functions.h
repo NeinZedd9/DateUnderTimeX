@@ -2,6 +2,7 @@
 
 @interface Functions : NSObject
 + (NSNumber *)getFreeMemory;
++ (NSString *)getTime;
 + (NSString *)getDate;
 + (NSString *)getDayOfTheWeek;
 + (NSString *)getDateAndDayOfTheWeek;
