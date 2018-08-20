@@ -81,7 +81,9 @@ static NSString *getDetail(int detailId) {
 
 	if([text containsString:@":"]) {
 		// 右側
-		[self setTextRightSide];
+		if ([[preferences objectForKey:@"lst_right_top_item"]intValue] != -1) {
+			[self setTextRightSide];
+		}
 
 		NSString *top = getDetail([[preferences objectForKey:@"lst_left_top_item"]intValue]);
 		NSString *bottom = getDetail([[preferences objectForKey:@"lst_left_bottom_item"]intValue]);
@@ -100,10 +102,6 @@ static NSString *getDetail(int detailId) {
 }
 
 %new - (void)setTextRightSide {
-	if ([[preferences objectForKey:@"lst_right_top_item"]intValue] == -1) {
-		return;
-	}
-
 	NSString *right = getDetail([[preferences objectForKey:@"lst_right_top_item"]intValue]);
 	// 変更がないときは何もしない
 	if ([right isEqualToString:self.rightSideText]) {
@@ -123,6 +121,10 @@ static NSString *getDetail(int detailId) {
 %property (nonatomic, retain) NSTimer *timer;
 
 - (instancetype)init {
+	if (!isEnabled) {
+		return %orig;
+	}
+
 	%orig;
 	self.timer = [NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"sl_interval"]floatValue] target:self selector:@selector(overwriteText:) userInfo:nil repeats:YES];
 	return self;
@@ -165,8 +167,12 @@ static NSString *getDetail(int detailId) {
 %hook _UIStatusBarForegroundView
 
 - (instancetype)initWithFrame:(CGRect)frame {
+	if (!isEnabled) {
+		return %orig;
+	}
+
     %orig;
-	if ([[preferences objectForKey:@"lst_left_bottom_item"]intValue] != -1) {
+	if ([[preferences objectForKey:@"lst_right_top_item"]intValue] != -1) {
 		[self initRightSideLabel];
     	[self addSubview:rightSideLabel];
 	}
