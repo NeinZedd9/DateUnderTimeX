@@ -64,21 +64,13 @@ static NSString *getDetail(int detailId) {
 	}
 }
 
-//起動時の処理
-%ctor {
-	loadPreferences();
-}
-
+%group Main
 %hook _UIStatusBarStringView
 
 %property (nonatomic, retain) NSString *leftSideText;
 %property (nonatomic, retain) NSString *rightSideText;
 
 - (void)setText:(NSString *)text {
-	if (!isEnabled) {
-		return %orig;
-	}
-
 	if([text containsString:@":"]) {
 		// 右側
 		if ([[preferences objectForKey:@"lst_right_top_item"]intValue] != -1) {
@@ -121,10 +113,6 @@ static NSString *getDetail(int detailId) {
 %property (nonatomic, retain) NSTimer *timer;
 
 - (instancetype)init {
-	if (!isEnabled) {
-		return %orig;
-	}
-
 	%orig;
 	self.timer = [NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"sl_interval"]floatValue] target:self selector:@selector(overwriteText:) userInfo:nil repeats:YES];
 	return self;
@@ -138,10 +126,6 @@ static NSString *getDetail(int detailId) {
 }
 
 - (id)applyUpdate:(id)arg1 toDisplayItem:(id)arg2 {
-	if (!isEnabled) {
-		return %orig;
-	}
-
 	id orig = %orig;
 	[self overwriteText:nil];
 	return orig;
@@ -152,10 +136,6 @@ static NSString *getDetail(int detailId) {
 %hook _UIStatusBarBackgroundActivityView
 
 - (void)setCenter:(CGPoint)point {
-	if (!isEnabled) {
-		return %orig;
-	}
-
 	point.y = 11;
 	self.frame = CGRectMake(0, 0, self.frame.size.width, 31);
 	self.pulseLayer.frame = CGRectMake(0, 0, self.frame.size.width, 31);
@@ -167,10 +147,6 @@ static NSString *getDetail(int detailId) {
 %hook _UIStatusBarForegroundView
 
 - (instancetype)initWithFrame:(CGRect)frame {
-	if (!isEnabled) {
-		return %orig;
-	}
-
     %orig;
 	if ([[preferences objectForKey:@"lst_right_top_item"]intValue] != -1) {
 		[self initRightSideLabel];
@@ -188,3 +164,12 @@ static NSString *getDetail(int detailId) {
 }
 
 %end
+%end
+
+//起動時の処理
+%ctor {
+	loadPreferences();
+	if (isEnabled) {
+		%init(Main);
+	}
+}
