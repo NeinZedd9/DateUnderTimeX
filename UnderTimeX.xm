@@ -7,7 +7,6 @@
 static NSString *const kSettingsPath = @"/var/mobile/Library/Preferences/jp.i4m1k0su.undertimex.plist";
 
 NSMutableDictionary *preferences;
-BOOL isEnabled = NO;
 UILabel *rightSideLabel;
 
 static void loadPreferences() {
@@ -41,7 +40,6 @@ static void loadPreferences() {
 		//あれば読み込み
 		preferences = [[NSMutableDictionary alloc] initWithContentsOfFile: kSettingsPath];
 	}
-	isEnabled = [[preferences objectForKey:@"sw_enabled"]boolValue];
 
 }
 
@@ -69,9 +67,11 @@ static NSString *getDetail(int detailId) {
 
 %property (nonatomic, retain) NSString *leftSideText;
 %property (nonatomic, retain) NSString *rightSideText;
+%property (assign, nonatomic, getter=isLeftSideLabel) BOOL leftSideLabel;
 
 - (void)setText:(NSString *)text {
-	if([text containsString:@":"]) {
+	self.leftSideLabel = [text containsString:@":"];
+	if(self.isLeftSideLabel) {
 		// 右側
 		if ([[preferences objectForKey:@"lst_right_top_item"]intValue] != -1) {
 			[self setTextRightSide];
@@ -87,7 +87,7 @@ static NSString *getDetail(int detailId) {
 		self.leftSideText = [NSString stringWithString:text];
 		self.numberOfLines = 2;
 		self.textAlignment = NSTextAlignmentCenter;
-		[self setFont: [self.font fontWithSize:12]];
+		self.font = [self.font fontWithSize:12];
 	}
 
 	return %orig(text);
@@ -100,38 +100,56 @@ static NSString *getDetail(int detailId) {
 		return;
 	}
 	self.rightSideText = [NSString stringWithString:right];
-
-	// NSLog(@"Color: %@", self.textColor);
-	// rightSideLabel.textColor = [UIColor whiteColor];
 	rightSideLabel.text = right;
 }
 
-%end
-
-%hook _UIStatusBarTimeItem
-
-%property (nonatomic, retain) NSTimer *timer;
-
-- (instancetype)init {
+// テーマは文字列をセットしたあとに反映される
+- (void)applyStyleAttributes:(id)arg1 {
 	%orig;
-	self.timer = [NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"sl_interval"]floatValue] target:self selector:@selector(overwriteText:) userInfo:nil repeats:YES];
-	return self;
-}
 
-%new - (void)overwriteText:(NSTimer *)timer {
-	self.shortTimeView.text = @":";
-	self.pillTimeView.text = @":";
-	[self.shortTimeView setFont: [self.shortTimeView.font fontWithSize:12]];
-	[self.pillTimeView setFont: [self.pillTimeView.font fontWithSize:12]];
-}
+	if(self.isLeftSideLabel) {
+		self.font = [self.font fontWithSize:12];
 
-- (id)applyUpdate:(id)arg1 toDisplayItem:(id)arg2 {
-	id orig = %orig;
-	[self overwriteText:nil];
-	return orig;
+		// 右側
+		if ([[preferences objectForKey:@"lst_right_top_item"]intValue] != -1) {
+			// 右側ラベルのテーマ変更
+			rightSideLabel.textColor = self.textColor;
+			rightSideLabel.font = [self.font fontWithSize:12];
+			rightSideLabel.hidden = self.hidden;
+		}
+	}
 }
 
 %end
+
+// %hook _UIStatusBarTimeItem
+
+// %property (nonatomic, retain) NSTimer *timer;
+
+// - (instancetype)init {
+// 	%orig;
+// 	// self.timer = [NSTimer scheduledTimerWithTimeInterval:[[preferences objectForKey:@"sl_interval"]floatValue] target:self selector:@selector(interval:) userInfo:nil repeats:YES];
+// 	return self;
+// }
+
+// %new - (void)interval:(NSTimer *)timer {
+// 	[self overwriteText];
+// }
+
+// %new - (void)overwriteText {
+// 	self.shortTimeView.text = @":";
+// 	self.pillTimeView.text = @":";
+// 	[self.shortTimeView setFont: [self.shortTimeView.font fontWithSize:12]];
+// 	[self.pillTimeView setFont: [self.pillTimeView.font fontWithSize:12]];
+// }
+
+// - (id)applyUpdate:(id)arg1 toDisplayItem:(id)arg2 {
+// 	id orig = %orig;
+// 	// [self overwriteText];
+// 	return orig;
+// }
+
+// %end
 
 %hook _UIStatusBarBackgroundActivityView
 
@@ -161,6 +179,7 @@ static NSString *getDetail(int detailId) {
     // self.rightSideLabel.adjustsFontSizeToFitWidth = YES;
 	rightSideLabel.textColor = [UIColor whiteColor];
     rightSideLabel.textAlignment = NSTextAlignmentCenter;
+	rightSideLabel.text = @"hoge MB";
 }
 
 %end
@@ -169,7 +188,9 @@ static NSString *getDetail(int detailId) {
 //起動時の処理
 %ctor {
 	loadPreferences();
-	if (isEnabled) {
+
+	// 設定で有効にしている時のみ動作
+	if ([[preferences objectForKey:@"sw_enabled"]boolValue]) {
 		%init(Main);
 	}
 }
